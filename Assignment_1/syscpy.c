@@ -29,6 +29,7 @@ int main(int argc, char* argv[]){
     while(syscall(SYS_read, inputOpened, character, 1) != 0){
         syscall(SYS_write, outputOpened, character, 1);
     }
+    
     // Close input file
     int closeInput = syscall(SYS_close, inputOpened);
     if(closeInput == -1){
