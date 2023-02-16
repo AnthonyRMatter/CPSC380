@@ -10,4 +10,4 @@
 #### Instructions to compile code
 
 ##### Step 1: Run command -> gcc syscpy.c -o syscpy
-##### Step 2: Execute -> ./syscpy <intput file> <output file>
+##### Step 2: Execute -> ./syscpy <intput_file> <output_file>
