@@ -18,7 +18,7 @@ int main(int argc, char* argv[]){
     }
 
     // Open the output file
-    int outputOpened = syscall(SYS_open, outputFile, O_WRONLY);
+    int outputOpened = syscall(SYS_open, outputFile, O_WRONLY | O_CREAT);
     if(outputOpened == -1){
         printf("Error: %s\n", strerror(errno));
         return -1;
