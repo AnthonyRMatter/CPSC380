@@ -27,6 +27,9 @@ int main(void){
         char inputs[MAX_LINE];
         fgets(inputs, sizeof(inputs), stdin);
 
+        // strip newline char
+        inputs[strcspn(inputs, "\n")] = 0; 
+
         //tokenization
         const char delimiter[2] = " ";
 
@@ -36,23 +39,27 @@ int main(void){
             args = strtok(NULL, delimiter);
         }
 
-        for(int i = 0; i < 2; ++i){
-            printf("%s\n", argarray[i]);
-            if(argarray[i] == NULL){
-                break;
-            }
-        }
+        //null-terminated array for execvp
+        argarray[i] = NULL;
+
+        // for(int i = 0; i < 2; ++i){
+        //     printf("%s\n", argarray[i]);
+        //     if(argarray[i] == NULL){
+        //         break;
+        //     }
+        // }
 
         // error handling
-        if(argarray[0] == "exit"){
-            exit(0);
-        }
 
 
 
         // fork child process using fork()
         pid_t pid;
 	    pid = fork();
+
+        if(strcmp(argarray[0], "exit") == 0){
+                exit(0);
+        }
     
         // the child process invokes execvp()
         if(pid < 0){
@@ -70,7 +77,7 @@ int main(void){
         else if (pid > 0) { /* parent process */
             int index = 0;
             while(argarray[index] != NULL){ // Traverse through user input
-                if(argarray[index] == "&"){ // If there is an &, 
+                if(strcmp(argarray[index], "&") == 0){ // If there is an &, wait for the child to finish
                     wait(NULL);
                     return 0;
                 }
