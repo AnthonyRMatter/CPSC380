@@ -65,7 +65,7 @@ int main(void){
         else if (pid == 0) { /* child process */
             int j = execvp(argarray[0], argarray);
 
-            printf("%d\n", j);
+            //printf("%d\n", j);
             return 0;
         }
         // parent can invoke wait() if last arg is &
@@ -73,12 +73,12 @@ int main(void){
             int index = 0;
             while(argarray[index] != NULL){ // Traverse through user input
                 if(strcmp(argarray[index], "&") == 0){ // If there is an &, wait for the child to finish
-                    printf("%s\n", "Tracked &");
                     wait(NULL);
+                    printf("Child Complete\n");
                     return 0;
                 }
 
-                if (strcmp(argarray[index], "exit") == 0){
+                else if (strcmp(argarray[index], "exit") == 0){
                     should_run = 0;
                     break;
                 }
