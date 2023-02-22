@@ -52,14 +52,9 @@ int main(void){
         // error handling
 
 
-
         // fork child process using fork()
         pid_t pid;
 	    pid = fork();
-
-        if(strcmp(argarray[0], "exit") == 0){
-                exit(0);
-        }
     
         // the child process invokes execvp()
         if(pid < 0){
@@ -81,10 +76,13 @@ int main(void){
                     wait(NULL);
                     return 0;
                 }
+
+                if (strcmp(argarray[index], "exit") == 0){
+                    should_run = 0;
+                    break;
+                }
                 index++;
             }
-            // wait(NULL);
-            // return 0;
         } 
     }
 
