@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <errno.h>
 
 
 #define MAX_LINE 80 /* The maximum length command*/
@@ -17,7 +18,8 @@
 int main(void){
     char *argarray[MAX_LINE/2 + 1]; 
     char *args; /* command line args */
-    int i = 0;
+    int i;
+    int hasAmpercand;
     int should_run = 1; /* flag to determine when to exit*/
     while (should_run){
         printf("osh> ");
@@ -27,30 +29,33 @@ int main(void){
         char inputs[MAX_LINE];
         fgets(inputs, sizeof(inputs), stdin);
 
+        int length = strlen(inputs);
+        inputs[length - 1] = '\0'; // Ensures that the end of the input is null terminated
+
         // strip newline char
         inputs[strcspn(inputs, "\n")] = 0; 
 
         //tokenization
         const char delimiter[2] = " ";
+        i = 0;
+        hasAmpercand = 0; 
 
         args = strtok(inputs, delimiter);
         while(args != NULL){
-            argarray[i++] = args;
-            args = strtok(NULL, delimiter);
+            if(strcmp(args,"&") == 0){
+                hasAmpercand = 1;
+                args = strtok(NULL, delimiter);
+            }
+            else
+            {
+                argarray[i++] = args;
+                args = strtok(NULL, delimiter);
+            }
+
         }
 
         //null-terminated array for execvp
-        argarray[i] = NULL;
-
-        // for(int i = 0; i < 2; ++i){
-        //     printf("%s\n", argarray[i]);
-        //     if(argarray[i] == NULL){
-        //         break;
-        //     }
-        // }
-
-        // error handling
-
+        argarray[i] = NULL; // We can now traverse through this array because we know that NULL marks the end of array
 
         // fork child process using fork()
         pid_t pid;
@@ -63,18 +68,17 @@ int main(void){
             return 1;
         }
         else if (pid == 0) { /* child process */
-            int j = execvp(argarray[0], argarray);
 
-            //printf("%d\n", j);
+            execvp(argarray[0], argarray);
+
             return 0;
         }
         // parent can invoke wait() if last arg is &
         else if (pid > 0) { /* parent process */
             int index = 0;
             while(argarray[index] != NULL){ // Traverse through user input
-                if(strcmp(argarray[index], "&") == 0){ // If there is an &, wait for the child to finish
+                if(hasAmpercand){
                     wait(NULL);
-                    printf("Child Complete\n");
                     return 0;
                 }
 
