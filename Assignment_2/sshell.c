@@ -9,12 +9,12 @@
 
 #define MAX_LINE 80 /* The maximum length command*/
 
-/*Fork a child process and that child process will invoke execvp*/
-/*When checking for &, always assume that it will be at the end*/
-/*We are calling the system to invoke commands*/
-/*When user input is parsed, make sure there is a null character after string
-(this will terminate the string)*/
-// Use strtok
+// How the program will work:
+/*  Fork a child process and that child process will invoke execvp*/
+/*  When checking for &, always assume that it will be at the end*/
+/*  We are calling the system to invoke commands*/
+/*  When user input is parsed, make sure there is a null character after string to terminate string*/
+
 int main(void){
     char *argarray[MAX_LINE/2 + 1]; 
     char *args; /* command line args */
