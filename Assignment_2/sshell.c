@@ -79,7 +79,6 @@ int main(void){
             while(argarray[index] != NULL){ // Traverse through user input
                 if(hasAmpercand){
                     wait(NULL);
-                    return 0;
                 }
 
                 else if (strcmp(argarray[index], "exit") == 0){
