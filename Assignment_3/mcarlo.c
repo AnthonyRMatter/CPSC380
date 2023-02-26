@@ -5,7 +5,9 @@
 #include <math.h>
 #include <sys/wait.h>
 
-/* THE PORTION BELOW IS JUST A CODE SEGMENT RIGHT NOW, IT WILL CHANGE LATER*/
+/* THIS CODE HAS THE LOGIC, BUT IT NEEDS TO HAVE THREADS INCLUDED*/
+
+void *runner(void *param); /* the thread */
 
 /* Generates a double precision random number */
 double random_double()
