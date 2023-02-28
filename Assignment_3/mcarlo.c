@@ -5,10 +5,13 @@
 #include <math.h>
 #include <sys/wait.h>
 
-/* THIS CODE HAS THE LOGIC, BUT IT NEEDS TO HAVE THREADS INCLUDED*/
-
-
+int npoints, thread;
+int hit_count = 0;
+double x, y;
 void *runner(void *param); /* the thread */
+
+//First Thread -> Parent Process
+//Second Thread -> Makes the calculations
 
 /* Generates a double precision random number */
 double random_double()
@@ -18,32 +21,42 @@ double random_double()
 
 int main(int argc, char* argv[])
 {
+    npoints = atoi(argv[1]);
 
-    int hit_count = 0;
-    int npoints = atoi(argv[1]);
-    /*Check for points inside circle*/
-    int i;
-    double x, y;
-
-    pid_t pid;
     pthread_t tid; 
     pthread_attr_t attr;
-    pid = fork();
 
-    if (pid == 0)
+    printf("Number of Points: %d\n", npoints);
+
+    pthread_attr_init(&attr);
+    thread = pthread_create(&tid, &attr, runner, NULL);
+
+    if(thread != 0)
     {
-        pthread_attr_init(&attr);
-        pthread_create(&tid, &attr, runner, NULL);
-        pthread_join(tid, NULL);
-        printf("Number of Points: %d\n", npoints);
-        return npoints;
-
-
+        perror("Error: Thread failed to produce");
+        exit(EXIT_FAILURE);
     }
-    else if (pid > 0)
+
+    thread = pthread_join(tid, NULL);
+
+    if(thread != 0)
     {
-        wait(NULL);
-        for (i = 0; i < npoints; ++i)
+        perror("Error: Thread failed to join");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Number of Points Inside Circle: %d\n", hit_count);
+
+    double pi = 4 * ((double)hit_count/npoints);
+
+    printf("Estimate of Pi: %f\n", pi);
+
+    return 0;
+}
+
+void *runner(void *param)
+{
+    for (int i = 0; i < npoints; ++i)
         {
             /* Generates random numbers between -1.0 and +1.0 (exclusive) */
             x = random_double() * 2.0 - 1.0;
@@ -54,16 +67,5 @@ int main(int argc, char* argv[])
                 ++hit_count;
             }
         }
-        printf("Number of Points Inside Circle: %d\n", hit_count);
-        double pi = 4 * ((double)hit_count/npoints);
-        printf("Estimate of Pi: %f\n", pi);
-    }
-
-    
-    return 0;
-}
-
-void *runner(void *param)
-{
     pthread_exit(0);
 }
