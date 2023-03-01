@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     pthread_attr_init(&attr);
     thread = pthread_create(&tid, &attr, runner, NULL);
 
+    // Check if thread was not created
     if(thread != 0)
     {
         perror("Error: Thread failed to produce");
@@ -39,6 +40,7 @@ int main(int argc, char* argv[])
 
     thread = pthread_join(tid, NULL);
 
+    // Check if thread did not join
     if(thread != 0)
     {
         perror("Error: Thread failed to join");
@@ -47,6 +49,7 @@ int main(int argc, char* argv[])
 
     printf("Number of Points Inside Circle: %d\n", hit_count);
 
+    // Calculate PI with updated value of hit_count
     double pi = 4 * ((double)hit_count/npoints);
 
     printf("Estimate of Pi: %f\n", pi);
