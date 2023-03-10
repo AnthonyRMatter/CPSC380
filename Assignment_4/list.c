@@ -22,23 +22,25 @@ void insert(struct node **head, Task *newTask) {
 void insertBack(struct node **head, Task *newTask)
 {
     struct node *newNode = malloc(sizeof(struct node));
-    newNode->next = NULL;
     newNode->task = newTask;
+    newNode->next = NULL;
 
     if(*head == NULL)
     {
+        //empty list
         *head = newNode;
+        return;
     }
     else
     {
         struct node *curr = malloc(sizeof(struct node));
         *head = curr;
-        while(curr != NULL)
+        while(curr->next != NULL)
         {
             // Traverse until you get to front of list
             curr = curr->next;
         }
-            curr->next = newNode;
+            curr->next = newNode; // Adds new node 
     }
 }
 
