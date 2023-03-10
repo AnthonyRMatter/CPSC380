@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#include "cpu.h"
+#include "task.h"
 
 // run this task for the specified time slice
 void run(Task *task, int slice) {

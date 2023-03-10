@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "list.h"
-#include "task.h"
 
 
 // add a new task to the list of tasks
@@ -18,6 +17,29 @@ void insert(struct node **head, Task *newTask) {
     newNode->task = newTask;
     newNode->next = *head;
     *head = newNode;
+}
+
+void insertBack(struct node **head, Task *newTask)
+{
+    struct node *newNode = malloc(sizeof(struct node));
+    newNode->next = NULL;
+    newNode->task = newTask;
+
+    if(*head == NULL)
+    {
+        *head = newNode;
+    }
+    else
+    {
+        struct node *curr = malloc(sizeof(struct node));
+        *head = curr;
+        while(curr != NULL)
+        {
+            // Traverse until you get to front of list
+            curr = curr->next;
+        }
+            curr->next = newNode;
+    }
 }
 
 // delete the selected task from the list

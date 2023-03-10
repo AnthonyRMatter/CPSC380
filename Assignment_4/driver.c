@@ -18,6 +18,7 @@
 
 int main(int argc, char *argv[])
 {
+    printf("Test");
     FILE *in;
     char *temp;
     char task[SIZE];
@@ -25,9 +26,9 @@ int main(int argc, char *argv[])
     char *name;
     int priority;
     int burst;
-
-    in = fopen(argv[1],"r");
     
+    in = fopen(argv[1],"r");
+
     while (fgets(task,SIZE,in) != NULL) {
         temp = strdup(task);
         name = strsep(&temp,",");
