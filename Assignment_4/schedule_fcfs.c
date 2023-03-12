@@ -15,7 +15,7 @@ void add(char *name, int priority, int burst)
     newTask->priority = priority;
     newTask->burst = burst;
 
-    insert(head, newTask);
+    insertBack(head, newTask);
 
 }
 
