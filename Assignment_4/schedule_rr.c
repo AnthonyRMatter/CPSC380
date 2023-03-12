@@ -44,8 +44,8 @@ void schedule()
             remainder->task->burst = sort->task->burst - QUANTUM;
             printf("Contents of Remainder Node:\n");
             printf("Name: %s", remainder->task->name);
-            print("Burst: %d", remainder->task->burst);
-            print("Priority: %d", remainder->task->priority);
+            printf("Burst: %d", remainder->task->burst);
+            printf("Priority: %d", remainder->task->priority);
             tail = remainder; // Set new end of list
             printf("Task burst: %d\n", sort->task->burst);
             sort->task->burst = QUANTUM;
