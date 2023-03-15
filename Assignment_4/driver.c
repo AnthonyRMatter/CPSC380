@@ -9,26 +9,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "task.h"
 #include "list.h"
 #include "schedulers.h"
 
-#define SIZE    100
+#define SIZE 100
 
 int main(int argc, char *argv[])
 {
-    printf("Test");
-    FILE *in;
+    printf("Test\n");
+    FILE *in = malloc(sizeof(in));
     char *temp;
     char task[SIZE];
+    //char *temp2 = malloc(sizeof(argv[1]));
+    //temp2 = argv[1];
+    char *inputFile = argv[1];
+    printf("Input: %s\n", inputFile);
 
     char *name;
     int priority;
     int burst;
     
-    in = fopen(argv[1],"r");
-
+    in = fopen(inputFile,"r");
+    // if(in == NULL)
+    // {
+    //     printf("Error opening file, errno = %d (%s)", errno, strerror(errno));
+    //     exit(0);
+    // }
     while (fgets(task,SIZE,in) != NULL) {
         temp = strdup(task);
         name = strsep(&temp,",");

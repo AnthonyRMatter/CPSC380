@@ -24,8 +24,9 @@ void insertBack(struct node **head, Task *newTask)
     struct node *newNode = malloc(sizeof(struct node));
     newNode->task = newTask;
     newNode->next = NULL;
+    struct node *curr = *head;
 
-    if(*head == NULL)
+    if(curr == NULL)
     {
         //empty list
         *head = newNode;
@@ -33,8 +34,6 @@ void insertBack(struct node **head, Task *newTask)
     }
     else
     {
-        struct node *curr = malloc(sizeof(struct node));
-        *head = curr;
         while(curr->next != NULL)
         {
             // Traverse until you get to front of list
@@ -43,6 +42,7 @@ void insertBack(struct node **head, Task *newTask)
             curr->next = newNode; // Adds new node 
     }
 }
+
 
 // delete the selected task from the list
 void delete(struct node **head, Task *task) {

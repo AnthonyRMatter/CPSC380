@@ -5,7 +5,7 @@
 #include "list.h"
 #include "cpu.h"
 
-struct node** head;
+struct node* head = NULL;
 
 void add(char *name, int priority, int burst)
 {
@@ -15,17 +15,21 @@ void add(char *name, int priority, int burst)
     newTask->priority = priority;
     newTask->burst = burst;
 
-    insertBack(head, newTask);
+    insertBack(&head, newTask);
 
 }
 
 void schedule()
 {
-    struct node* temp = *head;
+    struct node* temp = head;
     while(temp != NULL){
         run(temp->task,temp->task->burst);
         temp = temp->next;
+        //delete(&temp, temp->task);
     }
+
+
+
     // Take in tasks into an array
 
     // Call traverse list function in list.c to test if order of tasks FCFS
