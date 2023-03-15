@@ -22,19 +22,12 @@ void add(char *name, int priority, int burst)
 void schedule()
 {
     struct node* temp = head;
-    while(temp != NULL){
+    while(temp != NULL)
+    {
         run(temp->task,temp->task->burst);
         temp = temp->next;
         //delete(&temp, temp->task);
     }
-
-
-
-    // Take in tasks into an array
-
-    // Call traverse list function in list.c to test if order of tasks FCFS
-
-    // Traverse through list and execute tasks starting at index 0 through end of list
 }
 
 
