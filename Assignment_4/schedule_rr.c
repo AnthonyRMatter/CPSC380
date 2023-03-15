@@ -16,7 +16,6 @@ void add(char *name, int priority, int burst)
     newTask->burst = burst;
 
     insertBack(&head, newTask);
-
 }
 
 void schedule()
