@@ -39,7 +39,7 @@ void schedule()
            }
          temp = temp->next;    // move to the next element 
         }
-        tempTask = sort->task;
+        tempTask = sort->task; // Swap data of current burst with the smallest burst
         sort->task = min->task;
         min->task = tempTask;
 

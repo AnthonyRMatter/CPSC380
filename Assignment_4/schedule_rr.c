@@ -29,6 +29,7 @@ void schedule()
     }
 
     struct node* sort = head;
+    
 
     /*Traverse through the list*/
     while(sort != NULL) // LOOK OUT FOR: Might have to change this to a different node, since the length of this node might alter within the loop
