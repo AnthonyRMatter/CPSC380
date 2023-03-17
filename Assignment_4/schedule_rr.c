@@ -20,39 +20,34 @@ void add(char *name, int priority, int burst)
 
 void schedule()
 {
-    struct node* tail = head;
-
-    /*This will set a tail pointer to the end of the list*/
-    while(tail->next != NULL)
-    {
-        tail = tail->next;
-    }
-
     struct node* sort = head;
-    
+    int burstTime = 0;
 
     /*Traverse through the list*/
     while(sort != NULL) // LOOK OUT FOR: Might have to change this to a different node, since the length of this node might alter within the loop
     {
         /*If the burst is bigger than time quantum, set burst to remainder and put remainder at end of list*/
-        if(sort->task->burst - QUANTUM > 0)
+        //printf("Check Contents of Burst: %d\n", sort->task->burst);
+        burstTime = sort->task->burst;
+        if(burstTime - QUANTUM > 0)
         {
-            printf("Test\n");
+            //printf("Test\n");
             /*Create new node with all contents of node that has bigger burst than Time Quantum*/
-            struct node* remainder = malloc(sizeof(struct node));
-            printf("Test\n");
-            remainder = tail->next;
-            remainder->task->priority = sort->task->priority;
-            remainder->task->name = sort->task->name;
-            remainder->task->burst = sort->task->burst - QUANTUM;
-            printf("Contents of Remainder Node:\n");
-            printf("Name: %s\n", remainder->task->name);
-            printf("Burst: %d\n", remainder->task->burst);
-            printf("Priority: %d\n", remainder->task->priority);
-            tail = remainder; // Set new end of list
-            printf("Task burst: %d\n", sort->task->burst);
+            //printf("Test\n");
+            // newList->task->priority = sort->task->priority;
+            // newList->task->name = sort->task->name;
+            // newList->task->burst = sort->task->burst - QUANTUM;
+            add(sort->task->name, sort->task->priority, sort->task->burst - QUANTUM);
+            // printf("Contents of Kicked-Out Node:\n");
+            // printf("Name: %s\n", newList->task->name);
+            // printf("Burst: %d\n", newList->task->burst);
+            // printf("Priority: %d\n", newList->task->priority);
+            // tail->next = newList; // Set new end of list
+            // printf("Task burst: %d\n", tail->next->task->burst);
+
             sort->task->burst = QUANTUM;
         }
+
         sort = sort->next;
     }
     
