@@ -15,15 +15,21 @@
 
 #include "buffer.h"
 #include <stdio.h>
+#include <fcntl.h>          
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 
 buffer_item buffer[BUFFER_SIZE];
 void *Producer(void *param); /*Producer Thread*/
 void *Consumer(void *param); /*Consumer Thread*/
 int thread;
+sem_t *full;
+sem_t *empty;
+pthread_mutex_t *binary_mutex;
+
 
 // unsigned int checksum(unsigned int *ptr, int numberbytes)
 // {
@@ -69,8 +75,6 @@ uint16_t checksum(char *addr, uint32_t count)
     return (~sum);
 }
 
-
-
 int insert_item(buffer_item *item){
     // Calculate CheckSum
     uint32_t numberbytes = strlen(item->buffer);
@@ -88,6 +92,10 @@ int main(int argc, char *argv[]){
     //command line arguments 
     int producerThreads = atoi(argv[2]);
     int consumerThreads = atoi(argv[3]);
+
+    // Create Semaphores
+    full = sem_open("Full", O_CREAT, 0666, NUM_ITEMS);
+    empty = sem_open("Empty", O_CREAT, 0666, 0);
     //initialize buffer
     buffer_item *item = malloc(sizeof(buffer_item));
 
@@ -117,18 +125,48 @@ int main(int argc, char *argv[]){
     //consumer thread calls remove()
     
     //sleep 
-    sleep(atoi(argv[1])); 
-    //exit 
+    sleep(atoi(argv[1]));
+
+    // Delete Named Semaphores
+    sem_close(full);
+    sem_unlink("Full");
+    sem_close(empty);
+    sem_unlink("Empty");
+     
+    //exit
     return 0; 
 }
 
 
 void *Producer(void *param)
 {
-    // Do work
+    while(1)
+    {
+        // create buffer_item
+        // insert buffer_item into produced
+        sem_wait(empty);
+        pthread_mutex_lock(binary_mutex);
+
+        // add produced to buffer
+
+        pthread_mutex_unlock(binary_mutex);
+        sem_post(full);
+    }
 }
 
 void *Consumer(void *param)
 {
-    // Do work
+    while(1)
+    {
+
+        sem_wait(full);
+        pthread_mutex_lock(binary_mutex);
+
+        // Extract item from buffer to consumer buffer
+
+        pthread_mutex_unlock(binary_mutex);
+        sem_post(empty);
+
+        // Consume item next up in consumer buffer
+    }
 }
