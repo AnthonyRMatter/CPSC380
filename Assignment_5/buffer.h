@@ -8,5 +8,4 @@ typedef struct{
     uint8_t buffer[BUFFER_SIZE];
 } buffer_item;
 
-struct buffer_item *item[NUM_ITEMS]; 
 #endif

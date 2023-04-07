@@ -22,31 +22,13 @@
 #include <semaphore.h>
 
 
-buffer_item buffer[BUFFER_SIZE];
+buffer_item *items[NUM_ITEMS];
 void *Producer(void *param); /*Producer Thread*/
 void *Consumer(void *param); /*Consumer Thread*/
 int thread;
 sem_t *full;
 sem_t *empty;
-pthread_mutex_t *binary_mutex;
-
-
-// unsigned int checksum(unsigned int *ptr, int numberbytes)
-// {
-//     unsigned long total;
-//     for(total = 0; numberbytes > 1; numberbytes -= 2)
-//     {
-//         total += *ptr++;
-//     }
-//     if(numberbytes == 1)
-//     {
-//         total += *(unsigned char*)ptr;
-//     }
-    
-//     total = (total >> 16) + (total & 0xffff);
-//     total += (total >> 16);
-//     return (unsigned int)(total);
-// }
+pthread_mutex_t *binary_mutex; 
 
 uint16_t checksum(char *addr, uint32_t count)
 {
@@ -80,6 +62,17 @@ int insert_item(buffer_item *item){
     uint32_t numberbytes = strlen(item->buffer);
     char *ptr = (uint8_t *)item->buffer;
     item->cksum = checksum(ptr, numberbytes);
+
+
+    // for(int i = 0; i < NUM_ITEMS; ++i)
+    // {
+    //     if(items[i] == -1) // Check if space in buffer is available
+    //     {
+    //         items[i] = item; // If so, fill that space with a new item
+    //         return 0;
+    //     }
+    // }
+    // return -1;
     
     //return 0 if successful, -1 if error
 }
@@ -96,8 +89,8 @@ int main(int argc, char *argv[]){
     // Create Semaphores
     full = sem_open("Full", O_CREAT, 0666, NUM_ITEMS);
     empty = sem_open("Empty", O_CREAT, 0666, 0);
-    //initialize buffer
-    buffer_item *item = malloc(sizeof(buffer_item));
+    //initialize buffer 
+    buffer_item *item = malloc(sizeof(buffer_item)); // maybe
 
     //Create Producer and Consumer Thread IDs and Attributes
     pthread_t producerID;
@@ -132,7 +125,7 @@ int main(int argc, char *argv[]){
     sem_unlink("Full");
     sem_close(empty);
     sem_unlink("Empty");
-     
+
     //exit
     return 0; 
 }
@@ -142,12 +135,21 @@ void *Producer(void *param)
 {
     while(1)
     {
-        // create buffer_item
-        // insert buffer_item into produced
+        // Allocate buffer_item
+        buffer_item *item = malloc(sizeof(buffer_item));
+        int producedData = 0; // Not sure if this goes in here
+        for(int i = 0; i < BUFFER_SIZE; ++i)
+        {
+            producedData = rand() % 256;
+            item->buffer[i] = producedData;
+
+        }
+        
         sem_wait(empty);
         pthread_mutex_lock(binary_mutex);
 
         // add produced to buffer
+        insert_item(item);
 
         pthread_mutex_unlock(binary_mutex);
         sem_post(full);
