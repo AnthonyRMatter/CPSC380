@@ -65,8 +65,7 @@ int insert_item(buffer_item *item){
 
     //sem wait and mutex lock 
     //copy buffer in and 
-    //global variable for in and out -> insert buffer talks to in, incremenent, 
-
+    //global variable for in and out -> insert buffer talks to in, incremenent,
 
     // for(int i = 0; i < NUM_ITEMS; ++i){
     //     if(items[i] == -1) // Check if space in buffer is available
