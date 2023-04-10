@@ -31,7 +31,8 @@ sem_t *full;
 sem_t *empty;
 pthread_mutex_t binary_mutex;
 int in = -1; 
-int out = -1; 
+int out = -1;
+//int run = 1; 
 
 uint16_t checksum(char *addr, uint32_t count)
 {
@@ -56,42 +57,28 @@ uint16_t checksum(char *addr, uint32_t count)
 }
 
 int insert_item(buffer_item *item){
-    // Calculate CheckSum
-
-    // DONT NEED THIS PART
-    // uint32_t numberbytes = strlen(item->buffer);
-    // char *ptr = (uint8_t *)item->buffer;
-    // item->cksum = checksum(ptr, numberbytes);
-
-    //sem wait and mutex lock 
-    //copy buffer in and 
-    //global variable for in and out -> insert buffer talks to in, incremenent,
-
-    // for(int i = 0; i < NUM_ITEMS; ++i){
-    //     if(items[i] == -1) // Check if space in buffer is available
-    //     {
-    //         items[i] = item; // If so, fill that space with a new item
-    //         return 0;
-    //     }
-    // }
-    // return -1;
-
+    //check if full
+    if((in == out +1) || (in == 0 && out == NUM_ITEMS)){
+        printf ("buffer full\n"); 
+        return -1; 
+    }
     if(in == -1){
         in = 0; 
     }
     out = (out +1) % NUM_ITEMS; 
     items[out] = *item;
+    printf("%d\n",(int)items[out].buffer);
     printf("inserted\n");
     return 0;
-
-    //return -1;
-    
-    //return 0 if successful, -1 if error
 }
 
 int remove_item(buffer_item *item){
-    // traverse circular queue with global variables 
-    //items[out];
+    printf("%d\n",(int)items[in].buffer);
+    //check if empty
+    if(in == -1){
+        printf ("buffer empty\n"); 
+        return -1; 
+    } 
     if(in ==out){
         in = -1;
         out = -1;
@@ -117,6 +104,15 @@ int main(int argc, char *argv[]){
     int producerThreads = atoi(argv[2]);
     int consumerThreads = atoi(argv[3]);
 
+    //thread array
+    pthread_t *thread_array;
+    int nthreads = producerThreads + consumerThreads;
+    long *thread_ids;
+
+    thread_array = malloc(nthreads * sizeof(pthread_t));
+    thread_ids = malloc(nthreads * sizeof(long));
+
+
     // Create Semaphores
     full = sem_open("Full", O_CREAT, 0666, NUM_ITEMS);
     printf("Created full semaphore\n");
@@ -132,9 +128,6 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "sem_open() failed. errno: %d\n", errno);
     }
 
-    // Initialize Mutex Lock
-    //pthread_mutex_init(binary_mutex, NULL);
-
     //initialize buffer 
     buffer_item *item = malloc(sizeof(buffer_item)); // maybe
 
@@ -148,31 +141,30 @@ int main(int argc, char *argv[]){
     for(int i = 0; i < producerThreads; ++i)
     {
         pthread_attr_init(&producerAttr);
-        thread = pthread_create(&producerID[i], &producerAttr, Producer, NULL); //use an array to track number of threads 
+        thread_ids[i]= i;
+        thread = pthread_create(&thread_array[i], &producerAttr, Producer, NULL); //use an array to track number of threads 
     }
-    
-
     // Create Consumer Threads
-    for(int i = 0; i < consumerThreads; ++i)
+    for(int i = producerThreads; i < nthreads; ++i)
     {
         pthread_attr_init(&consumerAttr);
-        thread = pthread_create(&consumerID[i], &consumerAttr, Consumer, NULL); //use an array to track number of threads
+        thread_ids[i]= i;
+        thread = pthread_create(&thread_array[i], &consumerAttr, Consumer, NULL); //use an array to track number of threads
     }
 
-    /* Joined the threads */
-    for(int i = 0; i < producerThreads; ++i)
-    {
-        pthread_join(producerID[i], NULL);
-    }
-
-    for(int i = 0; i < consumerThreads; ++i)
-    {
-        pthread_join(consumerID[i], NULL);
-    }
-    
     //sleep 
     sleep(atoi(argv[1]));
 
+    /* Cancel the threads */
+    for (int i = 0; i < nthreads; i++) {
+        pthread_cancel(thread_array[i]);
+    }
+
+    /* Joined the threads */
+    for (int i = 0; i < nthreads; i++) {
+        pthread_join(thread_array[i], NULL);
+    }
+    
     // Delete Named Semaphores
     sem_close(full);
     sem_unlink("Full");
@@ -198,20 +190,18 @@ void *Producer(void *param){
 
         //enter critical section
         sem_wait(empty);
-        printf("produced2\n"); 
         pthread_mutex_lock(&binary_mutex);
-        printf("produced3\n"); 
         // calculate checksum 
         item.cksum = checksum((char *)item.buffer, BUFFER_SIZE);
 
         // add produced to buffer
         insert_item(&item);
-        printf("inserted 2\n");
     
         pthread_mutex_unlock(&binary_mutex);
         sem_post(full);
         //exit critical section
     }
+    pthread_exit(NULL);
 }
 
 void *Consumer(void *param){
@@ -223,10 +213,15 @@ void *Consumer(void *param){
         pthread_mutex_lock(&binary_mutex);
 
         // Extract item from buffer to consumer buffer
+        item = items[in];
 
+        if(item.cksum != checksum((char *)item.buffer, BUFFER_SIZE)){
+            printf("data corrupted\n");
+            printf("expected %02x, recieved %02x \n", item.cksum, checksum((char *)item.buffer, BUFFER_SIZE));
+            EXIT_FAILURE;
+        }        
 
         remove_item(&item);
-        printf("removed 2\n");
         pthread_mutex_unlock(&binary_mutex);
         sem_post(empty);
         printf("consumed\n");
@@ -234,4 +229,5 @@ void *Consumer(void *param){
 
         //exit critical section
     }
+    pthread_exit(NULL);
 }
