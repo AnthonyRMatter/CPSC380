@@ -30,9 +30,8 @@ int thread;
 sem_t *full;
 sem_t *empty;
 pthread_mutex_t binary_mutex;
-int in = -1; 
-int out = -1;
-//int run = 1; 
+int in = 0; 
+int out = 0;
 
 uint16_t checksum(char *addr, uint32_t count)
 {
@@ -56,41 +55,26 @@ uint16_t checksum(char *addr, uint32_t count)
     return (~sum);
 }
 
-int insert_item(buffer_item *item){
-    //check if full
-    if((in == out +1) || (in == 0 && out == NUM_ITEMS)){
-        printf ("buffer full\n"); 
-        return -1; 
-    }
-    if(in == -1){
-        in = 0; 
-    }
+int insert_item(buffer_item *item)
+{
+    
+    memcpy(&items[out], item, sizeof(buffer_item));
     out = (out +1) % NUM_ITEMS; 
-    items[out] = *item;
-    printf("%d\n",(int)items[out].buffer);
-    printf("inserted\n");
+
     return 0;
 }
 
-int remove_item(buffer_item *item){
-    printf("%d\n",(int)items[in].buffer);
-    //check if empty
-    if(in == -1){
-        printf ("buffer empty\n"); 
-        return -1; 
-    } 
-    if(in ==out){
-        in = -1;
-        out = -1;
-    }
-    else{
-        in = (in +1) % NUM_ITEMS; 
-    }
-    printf("removed\n");
+int remove_item(buffer_item *item)
+{
+    
+    memcpy(item,&items[in], sizeof(buffer_item));
+    in = (in +1) % NUM_ITEMS; 
+    
     return 0;
 }
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
      
     //delete any named semaphores just in case
     sem_unlink("Full");
@@ -114,15 +98,15 @@ int main(int argc, char *argv[]){
 
 
     // Create Semaphores
-    full = sem_open("Full", O_CREAT, 0666, NUM_ITEMS);
-    printf("Created full semaphore\n");
+    full = sem_open("Full", O_CREAT, 0666, 0);
+
     if(full == SEM_FAILED)
     {
         fprintf(stderr, "sem_open() failed. errno: %d\n", errno);
     }
 
-    empty = sem_open("Empty", O_CREAT, 0666, 0);
-    printf("Created empty semaphore\n");
+    empty = sem_open("Empty", O_CREAT, 0666, NUM_ITEMS);
+
     if(empty == SEM_FAILED)
     {
         fprintf(stderr, "sem_open() failed. errno: %d\n", errno);
@@ -186,13 +170,11 @@ void *Producer(void *param){
             item.buffer[i] = (uint8_t) producedData;
         }
 
-        printf("produced\n"); 
-
+        // calculate checksum 
+        item.cksum = checksum((char *)item.buffer, BUFFER_SIZE);
         //enter critical section
         sem_wait(empty);
         pthread_mutex_lock(&binary_mutex);
-        // calculate checksum 
-        item.cksum = checksum((char *)item.buffer, BUFFER_SIZE);
 
         // add produced to buffer
         insert_item(&item);
@@ -212,22 +194,21 @@ void *Consumer(void *param){
         sem_wait(full);
         pthread_mutex_lock(&binary_mutex);
 
-        // Extract item from buffer to consumer buffer
-        item = items[in];
+        // remove from buffer
+        remove_item(&item);
 
-        if(item.cksum != checksum((char *)item.buffer, BUFFER_SIZE)){
+        pthread_mutex_unlock(&binary_mutex);
+        sem_post(empty);
+        //exit critical section
+
+        int bufferCheckSum = checksum(item.buffer, BUFFER_SIZE);
+
+        // Compare Item Checksum with Buffer Checksum
+        if(item.cksum != bufferCheckSum){
             printf("data corrupted\n");
             printf("expected %02x, recieved %02x \n", item.cksum, checksum((char *)item.buffer, BUFFER_SIZE));
             EXIT_FAILURE;
-        }        
-
-        remove_item(&item);
-        pthread_mutex_unlock(&binary_mutex);
-        sem_post(empty);
-        printf("consumed\n");
-        // Consume item next up in consumer buffer
-
-        //exit critical section
+        }  
     }
     pthread_exit(NULL);
 }
