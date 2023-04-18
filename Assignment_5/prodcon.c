@@ -67,7 +67,7 @@ int insert_item(buffer_item *item)
 int remove_item(buffer_item *item)
 {
     
-    memcpy(item,&items[in], sizeof(buffer_item));
+    memcpy(item,&items[in], sizeof(buffer_item)); // memcpy is used to copy one block of memory to another
     in = (in +1) % NUM_ITEMS; 
     
     return 0;
