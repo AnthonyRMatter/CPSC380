@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
 
@@ -61,13 +62,9 @@ struct PageTable{
 struct TLB tlb[TLB_ENTRIES];
 
 struct PageTable Page_Table[PAGE_ENTRIES];
-//fread(&addr, sizeof(int),1,fd); 
 
+int Physical_Memory[NUMBER_OF_FRAMES * FRAME_SIZE];
 
-//fseek(512); 
-
-// vaddr.bf.pageno;
-// vaddr.bf.offset;
 void initializeTLBTable(){
     for(int i = 0; i < PAGE_ENTRIES; ++i)
     {
@@ -119,9 +116,11 @@ int main(int argc, char* argv[])
     initializePageTable();
 
     uint32_t bits;
+
     // Open addresses.txt
     addresses = fopen(argv[1], "r");
 
+    // Error handle opening the file
     if(addresses == NULL)
     {
         fprintf(stderr, "Error opening %s. Anticipated (name).txt\n", argv[1]);
@@ -130,6 +129,7 @@ int main(int argc, char* argv[])
 
 
     char BUFFER[32] = {0};
+    // Loop through file
     while(fgets(BUFFER, 32, addresses))
     {
         bits = atoi(BUFFER);
@@ -149,15 +149,32 @@ int main(int argc, char* argv[])
             if(PageTableChecker == -1)
             {
                 // If not, use offset to find and get page number from backing store
+                // Swap page in backing store with page in page table
+                    // Ideally use fseek() or fopen()/fclose()
+                // Translated virtual address from backing store and printed physical address
+                printf("Physical Address: %d", vaddr.ul);
             }
+            else
+            {
+                // Translated and printed physical address
+                printf("Physical Address: %d", vaddr.ul);
+            }
+        }
+        else
+        {
+            // Translated and printed physical address
+            printf("Physical Address: %d", vaddr.ul);
         }
     }
 
 
+    // Calculate Page-Fault rate
+
+    // Calculate TLB-Hit Rate
 
 
-
-
+    // close backing store
+    fclose(Backing_Store);
     // close addresses.txt
     fclose(addresses);
 
