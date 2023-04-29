@@ -144,7 +144,7 @@ void insertTLBPage(int page_Number, int frame_Number, int valid_Bit)
 {
     for(int i = 0; i < TLB_ENTRIES; ++i)
     {
-        if(tlb[i].page_number == -1)
+        if(tlb[i].page_number == -1 && tlb[i].frame_number == -1 && tlb[i].valid_bit == -1)
         {
             tlb[i].page_number = page_Number;
             tlb[i].frame_number = frame_Number;
@@ -167,12 +167,6 @@ int checkforOpenTLBPosition()
     return 0;
 }
 
-// How to use the physical memory
-// Page 66, offset 20
-// Physical memory and backing store are one-to-one
-// When we read from the backing store, we use the frame number to isolate the block and then the offset to isolate the particular byte to read
-// Memcpy the isolated byte from the backing store into your physical memory
-
 int main(int argc, char* argv[])
 {
     // Initilize the TLB to -1
@@ -183,13 +177,18 @@ int main(int argc, char* argv[])
 
     // Initialize Physical Memory
     for(int i = 0; i < PHYSICAL_MEMORY_SIZE; ++i){
-        Physical_Memory[i] = (int8_t)-1;
+        Physical_Memory[i] = -1;
     }
 
     uint32_t bits;
 
     // Open addresses.txt
     addresses = fopen(argv[1], "r");
+
+    if (argc != 2) {
+        printf("Error, Command-Lime Parameters Should Be: %s <Name of Text File>\n", argv[0]);
+        exit(1);
+    }
 
     // Error handle opening the file
     if(addresses == NULL)
@@ -212,17 +211,12 @@ int main(int argc, char* argv[])
     // Loop through file
     while(fgets(BUFFER, BUFFER_SIZE, addresses))
     {
-        bits = atoi(BUFFER);
         vaddr.ul = atoi(BUFFER);
         printf("Virtual Address: %d\t", vaddr.ul);
 
-        //mask and extract appropriate bits
+        //extract page number and offset
         vaddr.bf.pageno = ((vaddr.ul & 0xFF00) >> 8);
         vaddr.bf.offset = (vaddr.ul & 0xFF);
-
-        //printf("Page Number: %d\t", vaddr.bf.pageno);
-
-        //printf("Offset: %d\t", vaddr.bf.offset);
 
         // Evaluate address
         // Check if page number is in TLB
@@ -233,14 +227,7 @@ int main(int argc, char* argv[])
             PageTableChecker = checkPageTable(vaddr.bf.pageno, vaddr.bf.offset);
             if(PageTableChecker == -1)
             {
-                // If not, use offset to find and get page number from backing store
-                    // Ideally use fseek() or fopen()/fclose()
-                // Memcpy byte into physical memory given the frame number
-                // Use that same byte and add it to page table given the page number
-                Physical_Frame_Block = freeFrame * FRAME_SIZE;
-
                 int findFrame = fseek(Backing_Store, freeFrame * 256, SEEK_SET);
-                //int findFrame = fseek(Backing_Store, Physical_Frame_Block, SEEK_SET);
 
                 // Error handling
                 if(findFrame != 0)
@@ -248,10 +235,9 @@ int main(int argc, char* argv[])
                     fprintf(stderr, "Couldn't find frame in Backing Store\n");
                 }
 
-                //int storeOffset = vaddr.bf.pageno * FRAME_SIZE;
-                //printf("Fetching page from backing store at Page Number %i...\n", vaddr.bf.pageno);
                 fread(Physical_Page, FRAME_SIZE, 1, Backing_Store);
 
+                Physical_Frame_Block = freeFrame * FRAME_SIZE;
 
                 // Allocate memory
                 memcpy(&Physical_Memory[Physical_Frame_Block], Physical_Page, FRAME_SIZE);
@@ -265,20 +251,11 @@ int main(int argc, char* argv[])
                 physical_Address_Location = Physical_Frame_Block + vaddr.bf.offset;
 
                 // Get the Physical Address
-                // physical_Address = (uint32_t)&Physical_Memory[physical_Address_Location];
                 physical_Address = (uint64_t)&Physical_Memory[physical_Address_Location];
                 byte = (int8_t)Physical_Memory[physical_Address_Location];
-
-                // Translated virtual address from backing store and printed physical address
-
             }
             else
             {
-                // If found in Page Table but not in TLB, use LRU to make the replacement in the TLB
-                    // First Check if there is an open position in the TLB but if not
-                        // Set the Page Number in the TLB to our virtual page number and then set the physical address of that virtual page number given where it is in physical memory
-                        // Also set the valid bit of the TLB to 0 as well as set the frame number of that virtual address
-
                 if(checkforOpenTLBPosition() == -1)
                 {
                     // TLB has Open Position
@@ -293,38 +270,28 @@ int main(int argc, char* argv[])
                 physical_Address_Location = (Page_Table[vaddr.bf.pageno].frame_number * FRAME_SIZE) + vaddr.bf.offset;
 
                 // Get the Physical Address
-                physical_Address = (uint64_t)&Physical_Memory[physical_Address_Location];
-                // printf("Physical Address Location: %d\t", physical_Address_Location);
-                            
+                physical_Address = (uint64_t)&Physical_Memory[physical_Address_Location];                            
                 byte = (int8_t)Physical_Memory[physical_Address_Location];
-                // int8_t temp = 0xAA;
-                // printf("Temp Value: %hu,%d\n", temp, temp);
             }
         }
         else
-        {
-            // If Found in TLB
-                // Print Physical Address given that virtual address and frame number in the TLB
-            
+        {   
             // Gets the location of the physical address given the address in the TLB
             physical_Address_Location = (tlb[TLBChecker].frame_number * FRAME_SIZE) + vaddr.bf.offset;                
 
             // Get the Physical Address
             physical_Address = (uint64_t)&Physical_Memory[physical_Address_Location];
-
             byte = (int8_t)Physical_Memory[physical_Address_Location];
 
         }
         // Print Paging Information
-        printf("Physical Address Location: %d\t", physical_Address_Location);
         printf("Physical Address: %lu\t", physical_Address);
         printf("Signed Byte: %d\n", byte);
     }
 
     // Print Page Faults
     printf("\n");
-    printf("Paging Statistics:\n");
-    printf("Page Faults: %f\n", page_faults);
+    printf("Statistics:\n");
     // Calculate Page-Fault rate
     page_fault_rate = (page_faults / (page_faults + page_hits))*100;
     printf("Page Fault-Rate: %f%% \n", page_fault_rate);
